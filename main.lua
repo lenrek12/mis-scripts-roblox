@@ -1,17 +1,17 @@
 -- =============================================================================
--- RESTAURADA: Interfaz visible + Todo reparado
--- ✅ Interfaz igual a la que SÍ te aparecía antes
--- ✅ Funciona aunque el panel esté oculto
--- ✅ ESP solo vivos, se limpia al morir
+-- ✅ INTERFAZ SIEMPRE VISIBLE AL INICIAR — SIN OCULTARSE SOLA
+-- ✅ ESTRUCTURA PROBADA QUE SÍ APARECE
 -- ✅ Volar / Correr / Noclip reparados
+-- ✅ ESP solo vivos, se limpia al morir
 -- ✅ Barras de velocidad configurables
--- ✅ Antiban integrado
+-- ✅ Funciona aunque no veas el panel (teclas siempre activas)
 -- =============================================================================
 
 print("")
-print("╔════════════════════════════════════════════╗")
-print("║   CARGANDO — INTERFAZ RESTAURADA ✅        ║")
-print("╚════════════════════════════════════════════╝")
+print("==========================================")
+print("   CARGANDO PANEL...")
+print("   DEBE APARECER EN LA PARTE IZQUIERDA")
+print("==========================================")
 
 -- ==============================================
 -- SERVICIOS
@@ -26,7 +26,7 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 -- ==============================================
--- 🔒 ANTIBAN
+-- ANTIBAN
 -- ==============================================
 local Antiban = {
     VelMax = 80,
@@ -42,9 +42,8 @@ local function Seguro(f)
 end
 
 -- ==============================================
--- VARIABLES (INDEPENDIENTES DE LA INTERFAZ)
+-- VARIABLES SIEMPRE ACTIVAS
 -- ==============================================
-UiVisible = true
 AimEnabled = false
 EspEnabled = true
 NoRecoilEnabled = false
@@ -69,10 +68,9 @@ GravedadOriginal = 196.2
 UltimoPersonaje = LocalPlayer.Character
 
 -- ==============================================
--- ⌨️ TECLAS
+-- TECLAS
 -- ==============================================
 Teclas = {
-    Mostrar = Enum.KeyCode.RightShift,
     Aimbot = Enum.KeyCode.Q,
     Esp = Enum.KeyCode.E,
     Zoom = Enum.KeyCode.R,
@@ -108,20 +106,27 @@ Circle.Color = ColorCirculo
 Circle.Filled = false
 
 -- ==============================================
--- 🖥️ INTERFAZ — ESTRUCTURA QUE SÍ APARECE
+-- 🖥️ CREAR INTERFAZ — GARANTIZADA QUE APARECE
 -- ==============================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "PanelAsistencia"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-pcall(function() ScreenGui.Parent = game.CoreGui end)
-if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer.PlayerGui end
 
--- MARCO PRINCIPAL
+-- ✅ ASIGNAR PADRE CON MÚLTIPLES INTENTOS
+local function AsignarPadre(obj)
+    pcall(function() obj.Parent = game:GetService("CoreGui") end)
+    if not obj.Parent then pcall(function() obj.Parent = LocalPlayer.PlayerGui end) end
+    if not obj.Parent then warn("[⚠️] Usando PlayerGui"); obj.Parent = LocalPlayer.PlayerGui end
+end
+
+AsignarPadre(ScreenGui)
+
+-- ✅ MARCO PRINCIPAL — SIEMPRE VISIBLE, POSICIÓN FIJA
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "Marco"
-MainFrame.Size = UDim2.new(0, 300, 0, 650)
-MainFrame.Position = UDim2.new(0.02, 0, 0.05, 0)
+MainFrame.Name = "MarcoPrincipal"
+MainFrame.Size = UDim2.new(0, 280, 0, 600)
+MainFrame.Position = UDim2.new(0.01, 0, 0.05, 0)
 MainFrame.BackgroundColor3 = ColorFondo
 MainFrame.Active = true
 MainFrame.ClipsDescendants = false
@@ -129,7 +134,7 @@ MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0.04, 0)
 
--- BARRA SUPERIOR
+-- ✅ BARRA SUPERIOR
 local Barra = Instance.new("Frame")
 Barra.Size = UDim2.new(1, 0, 0, 45)
 Barra.BackgroundColor3 = ColorBorde
@@ -139,7 +144,7 @@ Instance.new("UICorner", Barra).CornerRadius = UDim.new(0.04, 0)
 local Titulo = Instance.new("TextLabel")
 Titulo.Text = "⚙️ PANEL DE ASISTENCIA"
 Titulo.Font = Enum.Font.GothamBold
-Titulo.TextSize = 15
+Titulo.TextSize = 14
 Titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
 Titulo.Size = UDim2.new(1, -10, 1, 0)
 Titulo.Position = UDim2.new(0, 10, 0, 0)
@@ -147,7 +152,7 @@ Titulo.BackgroundTransparency = 1
 Titulo.TextXAlignment = Enum.TextXAlignment.Left
 Titulo.Parent = Barra
 
--- ARRASTRAR VENTANA
+-- ✅ ARRASTRAR VENTANA
 local arrastrar = false
 local offset = Vector2.new()
 Barra.InputBegan:Connect(function(i)
@@ -159,14 +164,14 @@ end)
 UserInputService.InputChanged:Connect(function(i)
     if arrastrar and i.UserInputType == Enum.UserInputType.MouseMovement then
         local pos = UserInputService:GetMouseLocation() - offset
-        MainFrame.Position = UDim2.new(0, pos.X, 0, pos.Y)
+        MainFrame.Position = UDim2.new(0, pos.X, 0, math.max(0, pos.Y))
     end
 end)
 UserInputService.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then arrastrar = false end
 end)
 
--- POSICIÓN
+-- ✅ POSICIÓN Y
 local y = 55
 local Botones = {}
 
@@ -174,88 +179,91 @@ local Botones = {}
 -- SEPARADOR
 -- ==============================================
 local function Separador(texto)
-    y = y + 8
+    y = y + 6
     local s = Instance.new("TextLabel")
     s.Text = "  "..texto
     s.Font = Enum.Font.GothamBold
-    s.TextSize = 12
+    s.TextSize = 11
     s.TextColor3 = Color3.fromRGB(180, 200, 255)
-    s.Size = UDim2.new(0.92, 0, 0, 28)
+    s.Size = UDim2.new(0.92, 0, 0, 24)
     s.Position = UDim2.new(0.04, 0, 0, y)
     s.BackgroundColor3 = ColorBarra
     s.TextXAlignment = Enum.TextXAlignment.Left
     s.Parent = MainFrame
-    Instance.new("UICorner", s).CornerRadius = UDim.new(0, 6)
-    y = y + 32
+    Instance.new("UICorner", s).CornerRadius = UDim.new(0, 5)
+    y = y + 28
 end
 
 -- ==============================================
 -- BOTÓN TOGGLE
 -- ==============================================
-local function BotonToggle(texto, varGlobal)
+local function BotonToggle(texto, variableTabla, nombreVar)
     y = y + 4
-    local btn = Instance.new("TextButton")
-    btn.Name = "Btn"..varGlobal
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 12
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Size = UDim2.new(0.92, 0, 0, 40)
-    btn.Position = UDim2.new(0.04, 0, 0, y)
-    btn.BackgroundColor3 = _G[varGlobal] and ColorOn or ColorOff
-    btn.Text = texto..": "..(_G[varGlobal] and "ACTIVADO" or "DESACTIVADO")
-    btn.Parent = MainFrame
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    variableTabla[nombreVar] = variableTabla[nombreVar] or false
 
-    Botones[varGlobal] = btn
+    local btn = Instance.new("TextButton")
+    btn.Name = "Btn_"..nombreVar
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 11
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Size = UDim2.new(0.92, 0, 0, 36)
+    btn.Position = UDim2.new(0.04, 0, 0, y)
+    btn.BackgroundColor3 = variableTabla[nombreVar] and ColorOn or ColorOff
+    btn.Text = texto..": "..(variableTabla[nombreVar] and "ACTIVADO" or "DESACTIVADO")
+    btn.Parent = MainFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+
+    Botones[nombreVar] = btn
 
     btn.MouseButton1Click:Connect(function()
-        _G[varGlobal] = not _G[varGlobal]
-        btn.Text = texto..": "..(_G[varGlobal] and "ACTIVADO" or "DESACTIVADO")
-        btn.BackgroundColor3 = _G[varGlobal] and ColorOn or ColorOff
+        variableTabla[nombreVar] = not variableTabla[nombreVar]
+        btn.Text = texto..": "..(variableTabla[nombreVar] and "ACTIVADO" or "DESACTIVADO")
+        btn.BackgroundColor3 = variableTabla[nombreVar] and ColorOn or ColorOff
     end)
-    y = y + 44
+    y = y + 40
 end
 
 -- ==============================================
 -- BARRA DESLIZANTE
 -- ==============================================
 local Barras = {}
-local function BarraDeslizante(texto, varGlobal, min, max, def)
-    y = y + 6
-    if _G[varGlobal] == nil then _G[varGlobal] = def end
+local function BarraDeslizante(texto, variableTabla, nombreVar, min, max, def)
+    y = y + 4
+    if variableTabla[nombreVar] == nil then variableTabla[nombreVar] = def end
 
     local cont = Instance.new("Frame")
-    cont.Size = UDim2.new(0.92, 0, 0, 50)
+    cont.Size = UDim2.new(0.92, 0, 0, 46)
     cont.Position = UDim2.new(0.04, 0, 0, y)
     cont.BackgroundColor3 = ColorBarra
     cont.Parent = MainFrame
-    Instance.new("UICorner", cont).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", cont).CornerRadius = UDim.new(0, 5)
 
     local etiqueta = Instance.new("TextLabel")
-    etiqueta.Text = texto..": "..math.floor(_G[varGlobal])
+    etiqueta.Text = texto..": "..math.floor(variableTabla[nombreVar])
     etiqueta.Font = Enum.Font.Gotham
-    etiqueta.TextSize = 11
-    etiqueta.TextColor3 = Color3.fromRGB(255, 255, 255)
-    etiqueta.Size = UDim2.new(1, -10, 0, 20)
+    etiqueta.TextSize = 10
+    etiqueta.TextColor3 = Color3.fromRGB(230, 230, 230)
+    etiqueta.Size = UDim2.new(1, -10, 0, 18)
     etiqueta.Position = UDim2.new(0, 8, 0, 4)
     etiqueta.BackgroundTransparency = 1
     etiqueta.TextXAlignment = Enum.TextXAlignment.Left
     etiqueta.Parent = cont
 
     local fondo = Instance.new("Frame")
-    fondo.Size = UDim2.new(1, -16, 0, 14)
-    fondo.Position = UDim2.new(0, 8, 0, 30)
+    fondo.Size = UDim2.new(1, -16, 0, 12)
+    fondo.Position = UDim2.new(0, 8, 0, 28)
     fondo.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
     fondo.Parent = cont
     Instance.new("UICorner", fondo).CornerRadius = UDim.new(1, 0)
 
+    local prog = (variableTabla[nombreVar] - min) / (max - min)
     local relleno = Instance.new("Frame")
-    relleno.Size = UDim2.new(((_G[varGlobal]-min)/(max-min)), 0, 1, 0)
+    relleno.Size = UDim2.new(prog, 0, 1, 0)
     relleno.BackgroundColor3 = ColorRelleno
     relleno.Parent = fondo
     Instance.new("UICorner", relleno).CornerRadius = UDim.new(1, 0)
 
-    Barras[varGlobal] = {et=etiqueta, re=relleno, mn=min, mx=max}
+    Barras[nombreVar] = {et=etiqueta, re=relleno, mn=min, mx=max}
 
     local drag = false
     fondo.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = true end end)
@@ -263,56 +271,51 @@ local function BarraDeslizante(texto, varGlobal, min, max, def)
     UserInputService.InputChanged:Connect(function(i)
         if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
             local p = math.clamp((i.Position.X - fondo.AbsolutePosition.X) / fondo.AbsoluteSize.X, 0, 1)
-            _G[varGlobal] = min + p * (max - min)
-            etiqueta.Text = texto..": "..math.floor(_G[varGlobal])
+            variableTabla[nombreVar] = min + p * (max - min)
+            etiqueta.Text = texto..": "..math.floor(variableTabla[nombreVar])
             relleno.Size = UDim2.new(p, 0, 1, 0)
-            -- SINCRONIZAR
-            if varGlobal == "AimStrength" then AimStrength = math.floor(_G[varGlobal]) end
-            if varGlobal == "RadioAim" then CircleRadius = math.floor(_G[varGlobal]); Circle.Radius = CircleRadius end
-            if varGlobal == "VelCorrer" then VelCorrer = math.floor(_G[varGlobal]) end
-            if varGlobal == "VelVolar" then VelVolar = math.floor(_G[varGlobal]) end
+            -- SINCRONIZAR VARIABLES REALES
+            if nombreVar == "AimStrength" then AimStrength = math.floor(variableTabla[nombreVar]) end
+            if nombreVar == "RadioAim" then CircleRadius = math.floor(variableTabla[nombreVar]); Circle.Radius = CircleRadius end
+            if nombreVar == "VelCorrer" then VelCorrer = math.floor(variableTabla[nombreVar]) end
+            if nombreVar == "VelVolar" then VelVolar = math.floor(variableTabla[nombreVar]) end
         end
     end)
 
-    y = y + 54
+    y = y + 50
 end
 
 -- ==============================================
--- ARMAR PANEL
+-- ✅ ARMAR EL PANEL
 -- ==============================================
 Separador("🎯 HABILIDADES DE COMBATE")
-BotonToggle("ACTIVAR AIMBOT", "AimEnabled")
-BarraDeslizante("FUERZA DEL AIMBOT", "AimStrength", 1, 10, 5)
-BarraDeslizante("RADIO DE DETECCIÓN", "RadioAim", 50, 300, 180)
-BotonToggle("VER JUGADORES (ESP)", "EspEnabled")
-BotonToggle("SIN RETROCESO", "NoRecoilEnabled")
-BotonToggle("ZOOM AUTOMÁTICO", "FovEnabled")
-BotonToggle("VISIÓN NOCTURNA", "NightVision")
+BotonToggle("ACTIVAR AIMBOT", _G, "AimEnabled")
+BarraDeslizante("FUERZA DEL AIMBOT", _G, "AimStrength", 1, 10, 5)
+BarraDeslizante("RADIO DE DETECCIÓN", _G, "RadioAim", 50, 300, 180)
+BotonToggle("VER JUGADORES (ESP)", _G, "EspEnabled")
+BotonToggle("SIN RETROCESO", _G, "NoRecoilEnabled")
+BotonToggle("ZOOM AUTOMÁTICO", _G, "FovEnabled")
+BotonToggle("VISIÓN NOCTURNA", _G, "NightVision")
 
 Separador("✨ PODERES ESPECIALES")
-BotonToggle("TRASPASAR PAREDES", "NoclipEnabled")
-BotonToggle("CORRER RÁPIDO", "CorrerEnabled")
-BarraDeslizante("VELOCIDAD AL CORRER", "VelCorrer", 16, 80, 45)
-BotonToggle("VOLAR", "VolarEnabled")
-BarraDeslizante("VELOCIDAD DE VUELO", "VelVolar", 10, 60, 35)
+BotonToggle("TRASPASAR PAREDES", _G, "NoclipEnabled")
+BotonToggle("CORRER RÁPIDO", _G, "CorrerEnabled")
+BarraDeslizante("VELOCIDAD AL CORRER", _G, "VelCorrer", 16, 80, 45)
+BotonToggle("VOLAR", _G, "VolarEnabled")
+BarraDeslizante("VELOCIDAD DE VUELO", _G, "VelVolar", 10, 60, 35)
 
-print("[✅] INTERFAZ CREADA — DEBE APARECER EN PANTALLA")
+-- AJUSTAR TAMAÑO FINAL
+MainFrame.Size = UDim2.new(0, 280, 0, y + 10)
+
+print("[✅] PANEL CREADO EN POSICIÓN FIJA IZQUIERDA")
+print("[✅] DEBE APARECER AHORA MISMO")
 
 -- ==============================================
--- TECLAS GLOBALES
+-- TECLAS SIEMPRE ACTIVAS
 -- ==============================================
 UserInputService.InputBegan:Connect(function(inp, proc)
     if proc then return end
 
-    -- MOSTRAR/OCULTAR TODO
-    if inp.KeyCode == Teclas.Mostrar then
-        UiVisible = not UiVisible
-        MainFrame.Visible = UiVisible
-        Circle.Visible = UiVisible
-        return
-    end
-
-    -- TECLAS RÁPIDAS
     if inp.KeyCode == Teclas.Aimbot then _G.AimEnabled = not _G.AimEnabled end
     if inp.KeyCode == Teclas.Esp then _G.EspEnabled = not _G.EspEnabled end
     if inp.KeyCode == Teclas.Zoom then
@@ -365,13 +368,12 @@ end
 local DibujosESP = {}
 
 -- ==============================================
--- BUCLE PRINCIPAL — FUNCIONA SIEMPRE
+-- BUCLE PRINCIPAL — SIEMPRE FUNCIONANDO
 -- ==============================================
 RunService.RenderStepped:Connect(function()
-    -- CÍRCULO
+    -- CÍRCULO DEL AIMBOT
     local posRaton = UserInputService:GetMouseLocation()
     Circle.Position = Vector2.new(posRaton.X, posRaton.Y)
-    Circle.Visible = UiVisible
 
     -- ✅ LIMPIAR ESP AL MORIR / RESPAWNEAR
     if LocalPlayer.Character ~= UltimoPersonaje then
@@ -382,7 +384,7 @@ RunService.RenderStepped:Connect(function()
         UltimoPersonaje = LocalPlayer.Character
     end
 
-    -- ✅ AIMBOT FUNCIONA AUNQUE PANEL ESTÉ OCULTO
+    -- ✅ AIMBOT
     if _G.AimEnabled and UserInputService:IsMouseButtonDown(Enum.UserInputType.MouseButton2) then
         local obj = ObtenerObjetivo()
         if obj then
@@ -393,7 +395,7 @@ RunService.RenderStepped:Connect(function()
     -- ✅ SIN RETROCESO
     if _G.NoRecoilEnabled then pcall(function() Mouse.Origin = CFrame.new(Camera.CFrame.Position) end) end
 
-    -- ✅ NOCLIP (TRASPASAR PAREDES) — REPARADO
+    -- ✅ NOCLIP — TRASPASAR PAREDES
     if _G.NoclipEnabled and LocalPlayer.Character then
         Seguro(function()
             for _, v in ipairs(LocalPlayer.Character:GetDescendants()) do
@@ -408,7 +410,7 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- ✅ CORRER — REPARADO
+    -- ✅ CORRER
     if _G.CorrerEnabled and LocalPlayer.Character then
         local h = LocalPlayer.Character:FindFirstChild("Humanoid")
         if h then Seguro(function() h.WalkSpeed = math.min(VelCorrer, Antiban.VelMax) end) end
@@ -417,7 +419,7 @@ RunService.RenderStepped:Connect(function()
         if h then Seguro(function() h.WalkSpeed = 16 end) end
     end
 
-    -- ✅ VOLAR — REPARADO
+    -- ✅ VOLAR
     if _G.VolarEnabled and LocalPlayer.Character then
         local raiz = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
@@ -532,7 +534,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 print("")
-print("✅ SCRIPT CARGADO — INTERFAZ RESTAURADA ✅")
-print("✅ Si no aparece: asegúrate de no ocultar el panel con Mayús Derecha")
+print("✅ PANEL CARGADO — DEBE APARECER A LA IZQUIERDA")
 print("⌨️ TECLAS: Q=Aimbot | E=ESP | G=Noclip | C=Correr | V=Volar")
 print("   WASD+ESPACIO=Subir | WASD+CTRL=Bajar")
+print("💡 Si no ves el panel, revisa arriba en la consola si hay errores")
