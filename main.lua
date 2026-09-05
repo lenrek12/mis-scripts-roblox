@@ -1,16 +1,16 @@
 -- =============================================================================
--- ✅ INTERFAZ SIEMPRE VISIBLE AL INICIAR — SIN OCULTARSE SOLA
--- ✅ ESTRUCTURA PROBADA QUE SÍ APARECE
+-- ✅ PANEL EN EL CENTRO AL INICIAR
+-- ✅ PODER MOVERLO A CUALQUIER LUGAR
+-- ✅ BOTÓN MINIMIZAR / RESTAURAR
+-- ✅ BOTÓN MOSTRAR / OCULTAR DESDE EL PANEL
 -- ✅ Volar / Correr / Noclip reparados
 -- ✅ ESP solo vivos, se limpia al morir
 -- ✅ Barras de velocidad configurables
--- ✅ Funciona aunque no veas el panel (teclas siempre activas)
 -- =============================================================================
 
 print("")
 print("==========================================")
-print("   CARGANDO PANEL...")
-print("   DEBE APARECER EN LA PARTE IZQUIERDA")
+print("   CARGANDO PANEL EN EL CENTRO...")
 print("==========================================")
 
 -- ==============================================
@@ -20,6 +20,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
 
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
@@ -42,7 +43,7 @@ local function Seguro(f)
 end
 
 -- ==============================================
--- VARIABLES SIEMPRE ACTIVAS
+-- VARIABLES
 -- ==============================================
 AimEnabled = false
 EspEnabled = true
@@ -68,7 +69,7 @@ GravedadOriginal = 196.2
 UltimoPersonaje = LocalPlayer.Character
 
 -- ==============================================
--- TECLAS
+-- TECLAS DE EMERGENCIA (si ocultas todo)
 -- ==============================================
 Teclas = {
     Aimbot = Enum.KeyCode.Q,
@@ -92,6 +93,7 @@ ColorBorde = Color3.fromRGB(60, 60, 90)
 ColorBarra = Color3.fromRGB(50, 50, 70)
 ColorRelleno = Color3.fromRGB(80, 160, 255)
 ColorESP = Color3.fromRGB(0, 255, 100)
+ColorBotones = Color3.fromRGB(50, 50, 80)
 
 -- ==============================================
 -- CÍRCULO DEL AIMBOT
@@ -106,35 +108,34 @@ Circle.Color = ColorCirculo
 Circle.Filled = false
 
 -- ==============================================
--- 🖥️ CREAR INTERFAZ — GARANTIZADA QUE APARECE
+-- 🖥️ CREAR INTERFAZ — EN EL CENTRO AL INICIAR
 -- ==============================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "PanelAsistencia"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- ✅ ASIGNAR PADRE CON MÚLTIPLES INTENTOS
-local function AsignarPadre(obj)
-    pcall(function() obj.Parent = game:GetService("CoreGui") end)
-    if not obj.Parent then pcall(function() obj.Parent = LocalPlayer.PlayerGui end) end
-    if not obj.Parent then warn("[⚠️] Usando PlayerGui"); obj.Parent = LocalPlayer.PlayerGui end
-end
+-- ASIGNAR PADRE
+pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer.PlayerGui end
 
-AsignarPadre(ScreenGui)
+-- TAMAÑO DE PANTALLA
+local Pantalla = workspace.CurrentCamera.ViewportResolution
+local AnchoPanel, AltoPanel = 290, 610
 
--- ✅ MARCO PRINCIPAL — SIEMPRE VISIBLE, POSICIÓN FIJA
+-- ✅ MARCO PRINCIPAL — CENTRADO
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MarcoPrincipal"
-MainFrame.Size = UDim2.new(0, 280, 0, 600)
-MainFrame.Position = UDim2.new(0.01, 0, 0.05, 0)
+MainFrame.Size = UDim2.new(0, AnchoPanel, 0, AltoPanel)
+MainFrame.Position = UDim2.new(0.5, -AnchoPanel/2, 0.5, -AltoPanel/2) -- CENTRO
 MainFrame.BackgroundColor3 = ColorFondo
 MainFrame.Active = true
-MainFrame.ClipsDescendants = false
+MainFrame.ClipsDescendants = true
 MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0.04, 0)
 
--- ✅ BARRA SUPERIOR
+-- ✅ BARRA SUPERIOR (para arrastrar)
 local Barra = Instance.new("Frame")
 Barra.Size = UDim2.new(1, 0, 0, 45)
 Barra.BackgroundColor3 = ColorBorde
@@ -146,34 +147,98 @@ Titulo.Text = "⚙️ PANEL DE ASISTENCIA"
 Titulo.Font = Enum.Font.GothamBold
 Titulo.TextSize = 14
 Titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
-Titulo.Size = UDim2.new(1, -10, 1, 0)
+Titulo.Size = UDim2.new(1, -100, 1, 0)
 Titulo.Position = UDim2.new(0, 10, 0, 0)
 Titulo.BackgroundTransparency = 1
 Titulo.TextXAlignment = Enum.TextXAlignment.Left
 Titulo.Parent = Barra
 
--- ✅ ARRASTRAR VENTANA
-local arrastrar = false
-local offset = Vector2.new()
+-- ✅ BOTONES DE BARRA: MINIMIZAR Y OCULTAR
+local BotonMinimizar = Instance.new("TextButton")
+BotonMinimizar.Text = "−"
+BotonMinimizar.Font = Enum.Font.GothamBold
+BotonMinimizar.TextSize = 18
+BotonMinimizar.TextColor3 = Color3.fromRGB(255, 255, 255)
+BotonMinimizar.Size = UDim2.new(0, 32, 1, -10)
+BotonMinimizar.Position = UDim2.new(1, -70, 0, 5)
+BotonMinimizar.BackgroundColor3 = ColorBotones
+BotonMinimizar.Parent = Barra
+Instance.new("UICorner", BotonMinimizar).CornerRadius = UDim.new(0.5, 0)
+
+local BotonOcultar = Instance.new("TextButton")
+BotonOcultar.Text = "✕"
+BotonOcultar.Font = Enum.Font.GothamBold
+BotonOcultar.TextSize = 15
+BotonOcultar.TextColor3 = Color3.fromRGB(255, 255, 255)
+BotonOcultar.Size = UDim2.new(0, 32, 1, -10)
+BotonOcultar.Position = UDim2.new(1, -38, 0, 5)
+BotonOcultar.BackgroundColor3 = Color3.fromRGB(160, 40, 40)
+BotonOcultar.Parent = Barra
+Instance.new("UICorner", BotonOcultar).CornerRadius = UDim.new(0.5, 0)
+
+-- ✅ BOTÓN MOSTRAR (aparece al ocultar todo)
+local BotonMostrar = Instance.new("TextButton")
+BotonMostrar.Text = "⚙️"
+BotonMostrar.Font = Enum.Font.GothamBold
+BotonMostrar.TextSize = 18
+BotonMostrar.TextColor3 = Color3.fromRGB(255, 255, 255)
+BotonMostrar.Size = UDim2.new(0, 50, 0, 50)
+BotonMostrar.Position = UDim2.new(0.02, 0, 0.5, -25)
+BotonMostrar.BackgroundColor3 = ColorBorde
+BotonMostrar.Visible = false
+BotonMostrar.Parent = ScreenGui
+Instance.new("UICorner", BotonMostrar).CornerRadius = UDim.new(0.5, 0)
+
+-- ✅ LÓGICA MINIMIZAR / RESTAURAR
+local Minimizado = false
+local AlturaCompleta = AltoPanel
+BotonMinimizar.MouseButton1Click:Connect(function()
+    Minimizado = not Minimizado
+    if Minimizado then
+        MainFrame.Size = UDim2.new(0, AnchoPanel, 0, 45)
+        BotonMinimizar.Text = "+"
+    else
+        MainFrame.Size = UDim2.new(0, AnchoPanel, 0, AlturaCompleta)
+        BotonMinimizar.Text = "−"
+    end
+end)
+
+-- ✅ LÓGICA OCULTAR / MOSTRAR
+BotonOcultar.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    BotonMostrar.Visible = true
+end)
+BotonMostrar.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    BotonMostrar.Visible = false
+end)
+
+-- ✅ MOVER EL PANEL ARRASTRANDO LA BARRA
+local Arrastrando = false
+local Offset = Vector2.new()
+
 Barra.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
-        arrastrar = true
-        offset = UserInputService:GetMouseLocation() - MainFrame.AbsolutePosition
+        Arrastrando = true
+        Offset = UserInputService:GetMouseLocation() - MainFrame.AbsolutePosition
     end
 end)
 UserInputService.InputChanged:Connect(function(i)
-    if arrastrar and i.UserInputType == Enum.UserInputType.MouseMovement then
-        local pos = UserInputService:GetMouseLocation() - offset
-        MainFrame.Position = UDim2.new(0, pos.X, 0, math.max(0, pos.Y))
+    if Arrastrando and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local Pos = UserInputService:GetMouseLocation() - Offset
+        -- Limitar para que no se salga de la pantalla
+        local X = math.clamp(Pos.X, 0, Pantalla.X - AnchoPanel)
+        local Y = math.clamp(Pos.Y, 0, Pantalla.Y - 45)
+        MainFrame.Position = UDim2.new(0, X, 0, Y)
     end
 end)
 UserInputService.InputEnded:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 then arrastrar = false end
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then Arrastrando = false end
 end)
 
--- ✅ POSICIÓN Y
+-- ✅ POSICIÓN DE CONTENIDO
 local y = 55
-local Botones = {}
+local BotonesUI = {}
 
 -- ==============================================
 -- SEPARADOR
@@ -213,7 +278,7 @@ local function BotonToggle(texto, variableTabla, nombreVar)
     btn.Parent = MainFrame
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
 
-    Botones[nombreVar] = btn
+    BotonesUI[nombreVar] = btn
 
     btn.MouseButton1Click:Connect(function()
         variableTabla[nombreVar] = not variableTabla[nombreVar]
@@ -226,7 +291,7 @@ end
 -- ==============================================
 -- BARRA DESLIZANTE
 -- ==============================================
-local Barras = {}
+local BarrasUI = {}
 local function BarraDeslizante(texto, variableTabla, nombreVar, min, max, def)
     y = y + 4
     if variableTabla[nombreVar] == nil then variableTabla[nombreVar] = def end
@@ -263,7 +328,7 @@ local function BarraDeslizante(texto, variableTabla, nombreVar, min, max, def)
     relleno.Parent = fondo
     Instance.new("UICorner", relleno).CornerRadius = UDim.new(1, 0)
 
-    Barras[nombreVar] = {et=etiqueta, re=relleno, mn=min, mx=max}
+    BarrasUI[nombreVar] = {et=etiqueta, re=relleno, mn=min, mx=max}
 
     local drag = false
     fondo.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = true end end)
@@ -274,7 +339,7 @@ local function BarraDeslizante(texto, variableTabla, nombreVar, min, max, def)
             variableTabla[nombreVar] = min + p * (max - min)
             etiqueta.Text = texto..": "..math.floor(variableTabla[nombreVar])
             relleno.Size = UDim2.new(p, 0, 1, 0)
-            -- SINCRONIZAR VARIABLES REALES
+            -- SINCRONIZAR
             if nombreVar == "AimStrength" then AimStrength = math.floor(variableTabla[nombreVar]) end
             if nombreVar == "RadioAim" then CircleRadius = math.floor(variableTabla[nombreVar]); Circle.Radius = CircleRadius end
             if nombreVar == "VelCorrer" then VelCorrer = math.floor(variableTabla[nombreVar]) end
@@ -286,7 +351,7 @@ local function BarraDeslizante(texto, variableTabla, nombreVar, min, max, def)
 end
 
 -- ==============================================
--- ✅ ARMAR EL PANEL
+-- ARMAR EL PANEL
 -- ==============================================
 Separador("🎯 HABILIDADES DE COMBATE")
 BotonToggle("ACTIVAR AIMBOT", _G, "AimEnabled")
@@ -305,13 +370,15 @@ BotonToggle("VOLAR", _G, "VolarEnabled")
 BarraDeslizante("VELOCIDAD DE VUELO", _G, "VelVolar", 10, 60, 35)
 
 -- AJUSTAR TAMAÑO FINAL
-MainFrame.Size = UDim2.new(0, 280, 0, y + 10)
+AlturaCompleta = y + 10
+MainFrame.Size = UDim2.new(0, AnchoPanel, 0, AlturaCompleta)
 
-print("[✅] PANEL CREADO EN POSICIÓN FIJA IZQUIERDA")
-print("[✅] DEBE APARECER AHORA MISMO")
+print("[✅] PANEL CREADO EN EL CENTRO DE LA PANTALLA")
+print("[✅] Arrastra la barra superior para moverlo")
+print("[✅] Botón − = Minimizar / Botón ✕ = Ocultar")
 
 -- ==============================================
--- TECLAS SIEMPRE ACTIVAS
+-- TECLAS DE EMERGENCIA SI OCULTAS TODO
 -- ==============================================
 UserInputService.InputBegan:Connect(function(inp, proc)
     if proc then return end
@@ -341,7 +408,7 @@ UserInputService.InputBegan:Connect(function(inp, proc)
 end)
 
 -- ==============================================
--- AIMBOT — OBJETIVO MÁS CERCANO
+-- AIMBOT
 -- ==============================================
 local function ObtenerObjetivo()
     local raton = UserInputService:GetMouseLocation()
@@ -368,14 +435,14 @@ end
 local DibujosESP = {}
 
 -- ==============================================
--- BUCLE PRINCIPAL — SIEMPRE FUNCIONANDO
+-- BUCLE PRINCIPAL — FUNCIONA SIEMPRE
 -- ==============================================
 RunService.RenderStepped:Connect(function()
-    -- CÍRCULO DEL AIMBOT
+    -- CÍRCULO
     local posRaton = UserInputService:GetMouseLocation()
     Circle.Position = Vector2.new(posRaton.X, posRaton.Y)
 
-    -- ✅ LIMPIAR ESP AL MORIR / RESPAWNEAR
+    -- LIMPIAR ESP AL MORIR
     if LocalPlayer.Character ~= UltimoPersonaje then
         for _, j in pairs(DibujosESP) do
             for _, d in pairs(j) do pcall(function() d.Visible = false end) end
@@ -384,7 +451,7 @@ RunService.RenderStepped:Connect(function()
         UltimoPersonaje = LocalPlayer.Character
     end
 
-    -- ✅ AIMBOT
+    -- AIMBOT
     if _G.AimEnabled and UserInputService:IsMouseButtonDown(Enum.UserInputType.MouseButton2) then
         local obj = ObtenerObjetivo()
         if obj then
@@ -392,10 +459,10 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ✅ SIN RETROCESO
+    -- SIN RETROCESO
     if _G.NoRecoilEnabled then pcall(function() Mouse.Origin = CFrame.new(Camera.CFrame.Position) end) end
 
-    -- ✅ NOCLIP — TRASPASAR PAREDES
+    -- NOCLIP
     if _G.NoclipEnabled and LocalPlayer.Character then
         Seguro(function()
             for _, v in ipairs(LocalPlayer.Character:GetDescendants()) do
@@ -410,7 +477,7 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- ✅ CORRER
+    -- CORRER
     if _G.CorrerEnabled and LocalPlayer.Character then
         local h = LocalPlayer.Character:FindFirstChild("Humanoid")
         if h then Seguro(function() h.WalkSpeed = math.min(VelCorrer, Antiban.VelMax) end) end
@@ -419,7 +486,7 @@ RunService.RenderStepped:Connect(function()
         if h then Seguro(function() h.WalkSpeed = 16 end) end
     end
 
-    -- ✅ VOLAR
+    -- VOLAR
     if _G.VolarEnabled and LocalPlayer.Character then
         local raiz = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
@@ -443,7 +510,7 @@ RunService.RenderStepped:Connect(function()
         if hum then Seguro(function() hum.GravityScale = GravedadOriginal; hum.JumpPower = 50 end) end
     end
 
-    -- ✅ ESP — SOLO VIVOS + POR DISTANCIA
+    -- ESP — SOLO VIVOS
     if not _G.EspEnabled then
         for _, j in pairs(DibujosESP) do
             for _, d in pairs(j) do pcall(function() d.Visible = false end) end
@@ -483,7 +550,6 @@ RunService.RenderStepped:Connect(function()
             goto continuar
         end
 
-        -- CREAR DIBUJOS SI NO EXISTEN
         if not DibujosESP[jug] then
             DibujosESP[jug] = {
                 caja = Drawing.new("Square"),
@@ -534,7 +600,8 @@ RunService.RenderStepped:Connect(function()
 end)
 
 print("")
-print("✅ PANEL CARGADO — DEBE APARECER A LA IZQUIERDA")
-print("⌨️ TECLAS: Q=Aimbot | E=ESP | G=Noclip | C=Correr | V=Volar")
-print("   WASD+ESPACIO=Subir | WASD+CTRL=Bajar")
-print("💡 Si no ves el panel, revisa arriba en la consola si hay errores")
+print("✅ PANEL LISTO — APARECE EN EL CENTRO")
+print("🔘 Botón − = Minimizar / Restaurar")
+print("🔘 Botón ✕ = Ocultar todo (aparece botón ⚙️)")
+print("🖱️ Arrastra la barra azul para mover el panel")
+print("⌨️ Teclas de emergencia: Q=Aimbot E=ESP G=Noclip C=Correr V=Volar")
