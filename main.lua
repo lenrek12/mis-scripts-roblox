@@ -1,56 +1,44 @@
 -- ==============================================
--- PANEL DE ASISTENCIA — TODO VISIBLE SIN SCROLL
--- Panel lleno · Botones visibles · Círculo funciona
+-- VERSIÓN SIMPLIFICADA AL MÁXIMO
+-- Panel + TODOS los botones visibles desde el inicio
 -- ==============================================
 
-print("🔄 INICIANDO...")
+print("[1] INICIANDO...")
 
--- SERVICIOS
+-- SERVICIOS DIRECTOS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
-
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- VARIABLES GLOBALES
+print("[2] SERVICIOS CARGADOS")
+
+-- VARIABLES
 UiVisible = true
-Minimized = false
 AimEnabled = false
-AimStrength = 5
-AimPart = "Head"
-CircleRadius = 150
-FovEnabled = false
-FovValue = 2
-NoRecoilEnabled = false
 EspEnabled = true
+NoRecoilEnabled = false
+FovEnabled = false
 NightVision = false
-MaxDistance = 10000
 TraspasarParedes = false
 Correr = false
 Volar = false
-VelocidadCorrer = 16
-VelocidadVolar = 50
+AimStrength = 5
+CircleRadius = 150
 OriginalFOV = Camera.FieldOfView
 OriginalBrightness = Lighting.Brightness
 OriginalAmbient = Lighting.Ambient
 OriginalOutdoorAmbient = Lighting.OutdoorAmbient
 GravedadOriginal = 196.2
-VelocidadCamino = 16
 
-Teclas = {
-    MostrarOcultar = nil,
-    Aimbot = nil,
-    Esp = nil,
-    Zoom = nil,
-}
+ColorCirculo = Color3.fromRGB(0,255,0)
+ColorEsp = Color3.fromRGB(255,40,40)
+ColorVida = Color3.fromRGB(40,255,40)
 
-ColorEsp = Color3.fromRGB(255, 40, 40)
-ColorVida = Color3.fromRGB(40, 255, 40)
-ColorDistancia = Color3.fromRGB(255, 220, 40)
-ColorCirculo = Color3.fromRGB(0, 255, 0)
+print("[3] VARIABLES LISTAS")
 
 -- CÍRCULO
 Circle = nil
@@ -59,20 +47,10 @@ pcall(function()
     Circle.Visible = true
     Circle.Thickness = 2
     Circle.NumSides = 64
-    Circle.Transparency = 0.8
     Circle.Radius = CircleRadius
     Circle.Color = ColorCirculo
-    Circle.Filled = false
 end)
-
-function UpdateCircle()
-    if not Circle then return end
-    local succ, pos = pcall(function() return UserInputService:GetMouseLocation() end)
-    if succ and pos then
-        Circle.Position = Vector2.new(pos.X, pos.Y)
-        Circle.Visible = UiVisible
-    end
-end
+print("[4] CÍRCULO CREADO")
 
 -- INTERFAZ
 local ScreenGui = Instance.new("ScreenGui")
@@ -80,447 +58,359 @@ ScreenGui.Name = "PanelAsistencia"
 pcall(function() ScreenGui.Parent = game.CoreGui end)
 if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer.PlayerGui end
 pcall(function() ScreenGui.ResetOnSpawn = false end)
+print("[5] INTERFAZ EN: " .. ScreenGui.Parent.Name)
 
--- MARCO PRINCIPAL — MÁS ALTO PARA QUE QUEPA TODO
+-- MARCO PRINCIPAL
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MarcoPrincipal"
-MainFrame.Size = UDim2.new(0, 340, 0, 850)  -- ✅ MÁS ALTO
-MainFrame.Position = UDim2.new(0.02, 0, 0.02, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+MainFrame.Size = UDim2.new(0, 320, 0, 800)
+MainFrame.Position = UDim2.new(0.01,0,0.05,0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 MainFrame.Active = true
-MainFrame.ClipsDescendants = false  -- ✅ NO OCULTAR NADA
+MainFrame.ClipsDescendants = false
 MainFrame.Parent = ScreenGui
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0.025, 0)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0.03,0)
+print("[6] MARCO PRINCIPAL CREADO")
 
 -- BARRA SUPERIOR
 local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, 0, 0, 44)
-TitleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TitleBar.Size = UDim2.new(1,0,0,40)
+TitleBar.BackgroundColor3 = Color3.fromRGB(50,50,50)
 TitleBar.Parent = MainFrame
 
 local TitleText = Instance.new("TextLabel")
 TitleText.Text = "PANEL DE ASISTENCIA"
 TitleText.Font = Enum.Font.GothamBold
 TitleText.TextSize = 14
-TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleText.Size = UDim2.new(1, -80, 1, 0)
-TitleText.Position = UDim2.new(0, 12, 0, 0)
+TitleText.TextColor3 = Color3.fromRGB(255,255,255)
+TitleText.Size = UDim2.new(1,-10,1,0)
+TitleText.Position = UDim2.new(0,10,0,0)
 TitleText.BackgroundTransparency = 1
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.Parent = TitleBar
+print("[7] BARRA SUPERIOR LISTA")
 
--- BOTONES MINIMIZAR / CERRAR
-local BtnMin = Instance.new("TextButton")
-BtnMin.Name = "BtnMinimizar"
-BtnMin.Text = "−"
-BtnMin.Font = Enum.Font.GothamBold
-BtnMin.TextSize = 22
-BtnMin.TextColor3 = Color3.fromRGB(255, 255, 255)
-BtnMin.Size = UDim2.new(0, 40, 0, 36)
-BtnMin.Position = UDim2.new(1, -82, 0.5, -18)
-BtnMin.BackgroundColor3 = Color3.fromRGB(60, 90, 140)
-BtnMin.Parent = TitleBar
-Instance.new("UICorner", BtnMin).CornerRadius = UDim.new(0, 5)
-
-local BtnClose = Instance.new("TextButton")
-BtnClose.Name = "BtnCerrar"
-BtnClose.Text = "×"
-BtnClose.Font = Enum.Font.GothamBold
-BtnClose.TextSize = 22
-BtnClose.TextColor3 = Color3.fromRGB(255, 80, 80)
-BtnClose.Size = UDim2.new(0, 40, 0, 36)
-BtnClose.Position = UDim2.new(1, -40, 0.5, -18)
-BtnClose.BackgroundColor3 = Color3.fromRGB(90, 50, 50)
-BtnClose.Parent = TitleBar
-Instance.new("UICorner", BtnClose).CornerRadius = UDim.new(0, 5)
-
--- ARRASTRAR VENTANA
+-- ARRASTRAR
 local DragStart, StartPos
 TitleBar.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
         DragStart = UserInputService:GetMouseLocation()
         StartPos = MainFrame.Position
-        i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then DragStart = nil end end)
     end
 end)
 UserInputService.InputChanged:Connect(function(i)
     if DragStart and i.UserInputType == Enum.UserInputType.MouseMovement then
         local Delta = UserInputService:GetMouseLocation() - DragStart
-        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
+        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset+Delta.X, StartPos.Y.Scale, StartPos.Y.Offset+Delta.Y)
     end
 end)
 
-BtnMin.MouseButton1Click:Connect(function()
-    Minimized = not Minimized
-    if Minimized then MainFrame.Size = UDim2.new(0, 340, 0, 44)
-    else MainFrame.Size = UDim2.new(0, 340, 0, 850) end
-end)
+-- ==============================================
+-- CREAR BOTONES UNO POR UNO — DIRECTAMENTE
+-- ==============================================
 
-BtnClose.MouseButton1Click:Connect(function()
-    UiVisible = false
-    MainFrame.Visible = false
-    if Circle then Circle.Visible = false end
-end)
+local Y = 50
 
--- ✅ ELIMINADO EL SCROLL → TODO DIRECTO EN EL MARCO
-local Contenedor = MainFrame  -- Los botones van DIRECTO al marco
-
-BotonesEstado = {}
-BotonesTeclas = {}
-EsperandoTecla = nil
-PosicionY = 50  -- ✅ POSICIÓN FIJA Y ABAJO
-
-function NombreTecla(Tecla)
-    if not Tecla then return "NO ASIGNADA" end
-    return Tecla.Name:gsub("Enum.KeyCode.", "")
-end
-
-function CrearSeparador(Texto, Color)
-    PosicionY = PosicionY + 5
-    local Sep = Instance.new("TextLabel")
-    Sep.Text = Texto
-    Sep.Font = Enum.Font.GothamBold
-    Sep.TextSize = 13
-    Sep.TextColor3 = Color
-    Sep.Size = UDim2.new(0.94, 0, 0, 28)
-    Sep.Position = UDim2.new(0.03, 0, 0, PosicionY)
-    Sep.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    Sep.Parent = Contenedor
-    Instance.new("UICorner", Sep).CornerRadius = UDim.new(0, 6)
-    PosicionY = PosicionY + 30
-end
-
-function CrearBotonToggle(Nombre, Clave, Callback)
-    PosicionY = PosicionY + 2
-    BotonesEstado[Clave] = BotonesEstado[Clave] or false
+-- FUNCIÓN SIMPLE PARA CREAR BOTÓN
+local function CrearBoton(Texto, PosY, ColorFondo)
     local Btn = Instance.new("TextButton")
-    Btn.Name = "Btn_"..Clave
-    Btn.Text = Nombre..": "..(BotonesEstado[Clave] and "ON" or "OFF")
+    Btn.Name = "Boton_"..PosY
+    Btn.Text = Texto
     Btn.Font = Enum.Font.Gotham
     Btn.TextSize = 12
     Btn.TextColor3 = Color3.fromRGB(255,255,255)
-    Btn.Size = UDim2.new(0.94,0,0,44)
-    Btn.Position = UDim2.new(0.03, 0, 0, PosicionY)
-    Btn.BackgroundColor3 = BotonesEstado[Clave] and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
-    Btn.Parent = Contenedor
+    Btn.Size = UDim2.new(0.92,0,0,40)
+    Btn.Position = UDim2.new(0.04,0,0,PosY)
+    Btn.BackgroundColor3 = ColorFondo
+    Btn.Parent = MainFrame
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0,6)
-
-    Btn.MouseButton1Click:Connect(function()
-        BotonesEstado[Clave] = not BotonesEstado[Clave]
-        Btn.Text = Nombre..": "..(BotonesEstado[Clave] and "ON" or "OFF")
-        Btn.BackgroundColor3 = BotonesEstado[Clave] and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
-        if Callback then Callback(BotonesEstado[Clave]) end
-    end)
-    PosicionY = PosicionY + 46
+    return Btn
 end
 
-function CrearBotonTeclaConfig(Nombre, Clave)
-    PosicionY = PosicionY + 2
-    local Btn = Instance.new("TextButton")
-    Btn.Name = "Tecla_"..Clave
-    Btn.Text = Nombre..": ["..NombreTecla(Teclas[Clave]).."]"
-    Btn.Font = Enum.Font.Gotham
-    Btn.TextSize = 11
-    Btn.TextColor3 = Color3.fromRGB(255,255,255)
-    Btn.Size = UDim2.new(0.94,0,0,40)
-    Btn.Position = UDim2.new(0.03, 0, 0, PosicionY)
-    Btn.BackgroundColor3 = Color3.fromRGB(50,70,100)
-    Btn.Parent = Contenedor
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0,6)
-    BotonesTeclas[Clave] = Btn
-
-    Btn.MouseButton1Click:Connect(function()
-        Btn.Text = "⌘ PRESIONA TECLA..."
-        Btn.BackgroundColor3 = Color3.fromRGB(100,60,60)
-        EsperandoTecla = Clave
-    end)
-    PosicionY = PosicionY + 42
+-- SEPARADOR
+local function Separador(Texto, PosY)
+    local Sep = Instance.new("TextLabel")
+    Sep.Text = Texto
+    Sep.Font = Enum.Font.GothamBold
+    Sep.TextSize = 12
+    Sep.TextColor3 = Color3.fromRGB(255,200,40)
+    Sep.Size = UDim2.new(0.92,0,0,24)
+    Sep.Position = UDim2.new(0.04,0,0,PosY)
+    Sep.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    Sep.Parent = MainFrame
+    Instance.new("UICorner", Sep).CornerRadius = UDim.new(0,6)
+    return Sep
 end
 
-function CrearBarraDeslizante(Nombre, Variable, Min, Max, ValorInicial)
-    PosicionY = PosicionY + 2
-    if _G[Variable]==nil then _G[Variable]=ValorInicial end
-    local Cont = Instance.new("Frame")
-    Cont.Size = UDim2.new(0.94,0,0,54)
-    Cont.Position = UDim2.new(0.03, 0, 0, PosicionY)
-    Cont.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    Cont.Parent = Contenedor
-    Instance.new("UICorner", Cont).CornerRadius = UDim.new(0,6)
+-- ==============================================
+-- BOTONES CREADOS UNO POR UNO
+-- ==============================================
 
-    local Etiqueta = Instance.new("TextLabel")
-    Etiqueta.Text = Nombre..": "..math.floor(_G[Variable])
-    Etiqueta.Font = Enum.Font.Gotham
-    Etiqueta.TextSize = 11
-    Etiqueta.TextColor3 = Color3.fromRGB(255,255,255)
-    Etiqueta.Size = UDim2.new(1,-10,0,20)
-    Etiqueta.Position = UDim2.new(0,5,0,4)
-    Etiqueta.BackgroundTransparency = 1
-    Etiqueta.TextXAlignment = Enum.TextXAlignment.Left
-    Etiqueta.Parent = Cont
+Y = Y + 0
+Separador("HABILIDADES", Y); Y = Y + 28
 
-    local Fondo = Instance.new("Frame")
-    Fondo.Size = UDim2.new(1,-10,0,16)
-    Fondo.Position = UDim2.new(0,5,0,34)
-    Fondo.BackgroundColor3 = Color3.fromRGB(80,80,80)
-    Fondo.Parent = Cont
-    Instance.new("UICorner", Fondo).CornerRadius = UDim.new(1,0)
+Y = Y + 2
+local BtnAimbot = CrearBoton("🎯 AIMBOT: OFF", Y, Color3.fromRGB(130,35,35))
+Y = Y + 42
 
-    local Relleno = Instance.new("Frame")
-    Relleno.Size = UDim2.new((_G[Variable]-Min)/(Max-Min),0,1,0)
-    Relleno.BackgroundColor3 = Color3.fromRGB(80,180,255)
-    Relleno.Parent = Fondo
-    Instance.new("UICorner", Relleno).CornerRadius = UDim.new(1,0)
+Y = Y + 2
+local BtnEsp = CrearBoton("👁️ ESP: ON", Y, Color3.fromRGB(35,130,60))
+Y = Y + 42
 
-    local Arrastrando=false
-    Fondo.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 then Arrastrando=true end end)
-    UserInputService.InputEnded:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 then Arrastrando=false end end)
-    UserInputService.InputChanged:Connect(function(i)
-        if Arrastrando and i.UserInputType==Enum.UserInputType.MouseMovement then
-            local Prog=math.clamp((i.Position.X-Fondo.AbsolutePosition.X)/Fondo.AbsoluteSize.X,0,1)
-            _G[Variable]=math.floor(Min+Prog*(Max-Min))
-            Etiqueta.Text=Nombre..": ".._G[Variable]
-            Relleno.Size=UDim2.new(Prog,0,1,0)
-        end
-    end)
-    PosicionY = PosicionY + 56
-end
+Y = Y + 2
+local BtnNoRecoil = CrearBoton("🔫 SIN RETROCESO: OFF", Y, Color3.fromRGB(130,35,35))
+Y = Y + 42
 
--- DETECCIÓN DE TECLAS
-UserInputService.InputBegan:Connect(function(Entrada, Procesado)
-    if Procesado then return end
-    if EsperandoTecla then
-        if Entrada.KeyCode~=Enum.KeyCode.Unknown and Entrada.KeyCode~=Enum.KeyCode.Mouse1 and Entrada.KeyCode~=Enum.KeyCode.Mouse2 then
-            Teclas[EsperandoTecla]=Entrada.KeyCode
-            if BotonesTeclas[EsperandoTecla] then
-                BotonesTeclas[EsperandoTecla].Text=BotonesTeclas[EsperandoTecla].Text:gsub("%[.-%]","["..NombreTecla(Entrada.KeyCode).."]")
-                BotonesTeclas[EsperandoTecla].BackgroundColor3=Color3.fromRGB(50,70,100)
-            end
-            EsperandoTecla=nil
-        end
-        return
-    end
-    if UiVisible then
-        if Teclas.MostrarOcultar and Entrada.KeyCode==Teclas.MostrarOcultar then
-            UiVisible=not UiVisible
-            MainFrame.Visible=UiVisible or Minimized
-            if Circle then Circle.Visible=UiVisible end
-            if not UiVisible then Minimized=false end
-        end
-        if Teclas.Aimbot and Entrada.KeyCode==Teclas.Aimbot then BotonesEstado.AimEnabled=not BotonesEstado.AimEnabled end
-        if Teclas.Esp and Entrada.KeyCode==Teclas.Esp then BotonesEstado.EspEnabled=not BotonesEstado.EspEnabled end
-        if Teclas.Zoom and Entrada.KeyCode==Teclas.Zoom then
-            BotonesEstado.FovEnabled=not BotonesEstado.FovEnabled
-            Camera.FieldOfView=BotonesEstado.FovEnabled and OriginalFOV/FovValue or OriginalFOV
-        end
+Y = Y + 2
+local BtnZoom = CrearBoton("🔍 ZOOM: OFF", Y, Color3.fromRGB(130,35,35))
+Y = Y + 42
+
+Y = Y + 2
+local BtnNoche = CrearBoton("🌙 VISIÓN NOCTURNA: OFF", Y, Color3.fromRGB(130,35,35))
+Y = Y + 42
+
+Y = Y + 5
+Separador("PODERES ESPECIALES", Y); Y = Y + 28
+
+Y = Y + 2
+local BtnParedes = CrearBoton("👻 TRASPASAR PAREDES: OFF", Y, Color3.fromRGB(130,35,35))
+Y = Y + 42
+
+Y = Y + 2
+local BtnCorrer = CrearBoton("🏃 CORRER RÁPIDO: OFF", Y, Color3.fromRGB(130,35,35))
+Y = Y + 42
+
+Y = Y + 2
+local BtnVolar = CrearBoton("✈️ VOLAR: OFF", Y, Color3.fromRGB(130,35,35))
+Y = Y + 42
+
+print("[8] TODOS LOS BOTONES CREADOS")
+
+-- ==============================================
+-- FUNCIONES DE LOS BOTONES
+-- ==============================================
+
+BtnAimbot.MouseButton1Click:Connect(function()
+    AimEnabled = not AimEnabled
+    BtnAimbot.Text = AimEnabled and "🎯 AIMBOT: ON" or "🎯 AIMBOT: OFF"
+    BtnAimbot.BackgroundColor3 = AimEnabled and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
+end)
+
+BtnEsp.MouseButton1Click:Connect(function()
+    EspEnabled = not EspEnabled
+    BtnEsp.Text = EspEnabled and "👁️ ESP: ON" or "👁️ ESP: OFF"
+    BtnEsp.BackgroundColor3 = EspEnabled and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
+end)
+
+BtnNoRecoil.MouseButton1Click:Connect(function()
+    NoRecoilEnabled = not NoRecoilEnabled
+    BtnNoRecoil.Text = NoRecoilEnabled and "🔫 SIN RETROCESO: ON" or "🔫 SIN RETROCESO: OFF"
+    BtnNoRecoil.BackgroundColor3 = NoRecoilEnabled and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
+end)
+
+BtnZoom.MouseButton1Click:Connect(function()
+    FovEnabled = not FovEnabled
+    BtnZoom.Text = FovEnabled and "🔍 ZOOM: ON" or "🔍 ZOOM: OFF"
+    BtnZoom.BackgroundColor3 = FovEnabled and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
+    Camera.FieldOfView = FovEnabled and OriginalFOV/2 or OriginalFOV
+end)
+
+BtnNoche.MouseButton1Click:Connect(function()
+    NightVision = not NightVision
+    BtnNoche.Text = NightVision and "🌙 VISIÓN NOCTURNA: ON" or "🌙 VISIÓN NOCTURNA: OFF"
+    BtnNoche.BackgroundColor3 = NightVision and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
+    if NightVision then
+        Lighting.Brightness = 3.5
+        Lighting.Ambient = Color3.fromRGB(200,200,200)
+        Lighting.OutdoorAmbient = Color3.fromRGB(200,200,200)
+    else
+        Lighting.Brightness = OriginalBrightness
+        Lighting.Ambient = OriginalAmbient
+        Lighting.OutdoorAmbient = OriginalOutdoorAmbient
     end
 end)
 
--- ==============================================
--- CREAR TODO EL PANEL AHORA — POSICIONES FIJAS
--- ==============================================
-CrearSeparador("⚙️ HABILIDADES PRINCIPALES", Color3.fromRGB(255,200,40))
-CrearBotonToggle("🎯 ACTIVAR AIMBOT", "AimEnabled")
-CrearBotonToggle("🔫 SIN RETROCESO", "NoRecoilEnabled")
-CrearBotonToggle("👁️ VER JUGADORES (ESP)", "EspEnabled")
-CrearBotonToggle("🔍 ACTIVAR ZOOM", "FovEnabled", function(On)
-    Camera.FieldOfView=On and OriginalFOV/FovValue or OriginalFOV
-end)
-CrearBotonToggle("🌙 VISIÓN NOCTURNA", "NightVision", function(On)
-    if On then Lighting.Brightness=3.5 Lighting.Ambient=Color3.fromRGB(200,200,200) Lighting.OutdoorAmbient=Color3.fromRGB(200,200,200)
-    else Lighting.Brightness=OriginalBrightness Lighting.Ambient=OriginalAmbient Lighting.OutdoorAmbient=OriginalOutdoorAmbient end
+BtnParedes.MouseButton1Click:Connect(function()
+    TraspasarParedes = not TraspasarParedes
+    BtnParedes.Text = TraspasarParedes and "👻 TRASPASAR PAREDES: ON" or "👻 TRASPASAR PAREDES: OFF"
+    BtnParedes.BackgroundColor3 = TraspasarParedes and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
 end)
 
-CrearSeparador("✨ SECCIÓN DIOS — PODERES", Color3.fromRGB(255,80,255))
-CrearBotonToggle("👻 TRASPASAR PAREDES", "TraspasarParedes", function(On) TraspasarParedes=On end)
-CrearBotonToggle("🏃 CORRER RÁPIDO", "Correr", function(On)
-    Correr=On
+BtnCorrer.MouseButton1Click:Connect(function()
+    Correr = not Correr
+    BtnCorrer.Text = Correr and "🏃 CORRER RÁPIDO: ON" or "🏃 CORRER RÁPIDO: OFF"
+    BtnCorrer.BackgroundColor3 = Correr and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed=On and (_G.VelocidadCorrer or 16) or VelocidadCamino
+        LocalPlayer.Character.Humanoid.WalkSpeed = Correr and 50 or 16
     end
 end)
-CrearBarraDeslizante("⚡ VELOCIDAD AL CORRER", "VelocidadCorrer",1,1000,16)
-CrearBotonToggle("✈️ VOLAR", "Volar", function(On)
-    Volar=On
+
+BtnVolar.MouseButton1Click:Connect(function()
+    Volar = not Volar
+    BtnVolar.Text = Volar and "✈️ VOLAR: ON" or "✈️ VOLAR: OFF"
+    BtnVolar.BackgroundColor3 = Volar and Color3.fromRGB(35,130,60) or Color3.fromRGB(130,35,35)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.GravityScale=On and 0 or GravedadOriginal
-        LocalPlayer.Character.Humanoid.JumpPower=On and 0 or 50
+        LocalPlayer.Character.Humanoid.GravityScale = Volar and 0 or GravedadOriginal
     end
 end)
-CrearBarraDeslizante("🚀 VELOCIDAD DE VUELO", "VelocidadVolar",1,1000,50)
 
-CrearSeparador("⌘ TECLAS CONFIGURABLES", Color3.fromRGB(100,180,255))
-CrearBotonTeclaConfig("Mostrar/Ocultar Panel", "MostrarOcultar")
-CrearBotonTeclaConfig("Activar Aimbot", "Aimbot")
-CrearBotonTeclaConfig("Activar ESP", "Esp")
-CrearBotonTeclaConfig("Activar Zoom", "Zoom")
-
-PosicionY = PosicionY + 5
-local Info=Instance.new("TextLabel")
-Info.Text="📌 INSTRUCCIONES:\n─────────────────────\n🖱️ BOTÓN DERECHO = Apuntar\n✈️ Volar: WASD+ESPACIO+CTRL\n─────────────────────\nPulsa botones AZULES para asignar teclas\n─────────────────────\nCírculo VERDE = Zona de apuntado"
-Info.Font=Enum.Font.Gotham
-Info.TextSize=10
-Info.TextColor3=Color3.fromRGB(160,160,160)
-Info.Size=UDim2.new(0.94,0,0,100)
-Info.Position=UDim2.new(0.03,0,0,PosicionY)
-Info.BackgroundColor3=Color3.fromRGB(30,30,30)
-Info.TextWrapped=true
-Info.TextXAlignment=Enum.TextXAlignment.Left
-Info.Parent=Contenedor
-Instance.new("UICorner",Info).CornerRadius=UDim.new(0,6)
-
-print("✅ PANEL CREADO — Elementos:", #Contenedor:GetChildren())
+print("[9] TODAS LAS FUNCIONES CONECTADAS")
 
 -- ==============================================
--- SISTEMA DE APUNTADO
+-- SISTEMA DE AIMBOT
 -- ==============================================
-function ObtenerObjetivoMasCercano()
-    local MousePos=UserInputService:GetMouseLocation()
-    local MejorObjetivo,MenorDist=nil,CircleRadius
-    for _,Jugador in ipairs(Players:GetPlayers()) do
-        if Jugador~=LocalPlayer and Jugador.Character then
-            local Car=Jugador.Character
-            local Raiz=Car:FindFirstChild("HumanoidRootPart")
-            local Hum=Car:FindFirstChild("Humanoid")
-            if Raiz and Hum and Hum.Health>0 then
-                local Apuntar=Car:FindFirstChild(AimPart) or Car.Head
-                local Pantalla,Visible=Camera:WorldToViewportPoint(Apuntar.Position)
-                if Visible then
-                    local Dist=(Vector2.new(Pantalla.X,Pantalla.Y)-Vector2.new(MousePos.X,MousePos.Y)).Magnitude
-                    if Dist<MenorDist then MenorDist=Dist MejorObjetivo=Apuntar end
+function ObtenerObjetivo()
+    local MousePos = UserInputService:GetMouseLocation()
+    local Mejor, Menor = nil, CircleRadius
+    for _,P in ipairs(Players:GetPlayers()) do
+        if P ~= LocalPlayer and P.Character then
+            local R = P.Character:FindFirstChild("HumanoidRootPart")
+            local H = P.Character:FindFirstChild("Humanoid")
+            if R and H and H.Health > 0 then
+                local Cabeza = P.Character.Head
+                local Pos, Vis = Camera:WorldToViewportPoint(Cabeza.Position)
+                if Vis then
+                    local D = (Vector2.new(Pos.X, Pos.Y) - Vector2.new(MousePos.X, MousePos.Y)).Magnitude
+                    if D < Menor then Menor = D Mejor = Cabeza end
                 end
             end
         end
     end
-    return MejorObjetivo
+    return Mejor
 end
 
 -- ESP
-DibujosESP={}
+DibujosESP = {}
 
+-- ==============================================
 -- BUCLE PRINCIPAL
+-- ==============================================
 RunService.RenderStepped:Connect(function()
-    UpdateCircle()
-
-    if not UiVisible then
-        for _,J in pairs(DibujosESP) do for _,D in pairs(J) do pcall(function() D.Visible=false end) end end
-        return
+    -- CÍRCULO SIGUE AL RATÓN
+    if Circle then
+        local Pos = UserInputService:GetMouseLocation()
+        Circle.Position = Vector2.new(Pos.X, Pos.Y)
+        Circle.Visible = UiVisible
     end
 
+    if not UiVisible then return end
+
     -- AIMBOT
-    if BotonesEstado.AimEnabled and UserInputService:IsMouseButtonDown(Enum.UserInputType.MouseButton2) then
-        local Obj=ObtenerObjetivoMasCercano()
-        if Obj then Camera.CFrame=Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position,Obj.Position),AimStrength/10) end
+    if AimEnabled and UserInputService:IsMouseButtonDown(Enum.UserInputType.MouseButton2) then
+        local Obj = ObtenerObjetivo()
+        if Obj then Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, Obj.Position), AimStrength/10) end
     end
 
     -- SIN RETROCESO
-    if BotonesEstado.NoRecoilEnabled then pcall(function() Mouse.Origin=CFrame.new(Camera.CFrame.Position) end) end
+    if NoRecoilEnabled then pcall(function() Mouse.Origin = CFrame.new(Camera.CFrame.Position) end) end
 
     -- TRASPASAR PAREDES
     if TraspasarParedes and LocalPlayer.Character then
-        pcall(function() for _,P in ipairs(LocalPlayer.Character:GetDescendants()) do if P:IsA("BasePart") then P.CanCollide=false end end end)
+        pcall(function()
+            for _,v in ipairs(LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
+            end
+        end)
     elseif not TraspasarParedes and LocalPlayer.Character then
-        pcall(function() for _,P in ipairs(LocalPlayer.Character:GetDescendants()) do if P:IsA("BasePart") and P.Name~="HumanoidRootPart" then P.CanCollide=true end end end)
+        pcall(function()
+            for _,v in ipairs(LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then v.CanCollide = true end
+            end
+        end)
     end
 
     -- CORRER
     if Correr and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed=_G.VelocidadCorrer or 16
-    elseif not Correr and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed=VelocidadCamino
+        LocalPlayer.Character.Humanoid.WalkSpeed = 50
     end
 
     -- VOLAR
     if Volar and LocalPlayer.Character then
-        local Raiz=LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local Hum=LocalPlayer.Character:FindFirstChild("Humanoid")
-        if Raiz and Hum then
-            Hum.GravityScale=0 Hum.JumpPower=0
-            local Vel=(_G.VelocidadVolar or 50)/10
-            local Dir=Vector3.new()
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then Dir+=Camera.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then Dir-=Camera.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then Dir-=Camera.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then Dir+=Camera.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then Dir+=Vector3.new(0,1,0) end
-            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then Dir-=Vector3.new(0,1,0) end
-            Raiz.Velocity=Raiz.CFrame:VectorToWorldSpace(Dir*Vel)
+        local R = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local H = LocalPlayer.Character:FindFirstChild("Humanoid")
+        if R and H then
+            H.GravityScale = 0
+            local Dir = Vector3.new()
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then Dir += Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then Dir -= Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then Dir -= Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then Dir += Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then Dir += Vector3.new(0,1,0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then Dir -= Vector3.new(0,1,0) end
+            R.Velocity = R.CFrame:VectorToWorldSpace(Dir * 5)
         end
-    elseif not Volar and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.GravityScale=GravedadOriginal
-        LocalPlayer.Character.Humanoid.JumpPower=50
     end
 
     -- ESP
-    if not BotonesEstado.EspEnabled then
-        for _,J in pairs(DibujosESP) do for _,D in pairs(J) do pcall(function() D.Visible=false end) end end
+    if not EspEnabled then
+        for _,J in pairs(DibujosESP) do
+            for _,D in pairs(J) do pcall(function() D.Visible = false end) end
+        end
         return
     end
 
-    for _,Jugador in ipairs(Players:GetPlayers()) do
-        if Jugador==LocalPlayer then if DibujosESP[Jugador] then for _,D in pairs(DibujosESP[Jugador]) do pcall(function() D.Visible=false end) end end goto continue end
-        local Car=Jugador.Character
-        local Mostrar=true
-        if not Car then Mostrar=false
-        elseif not Car:FindFirstChild("HumanoidRootPart") then Mostrar=false
-        elseif not Car:FindFirstChild("Humanoid") then Mostrar=false
-        elseif Car.Humanoid.Health<=0 then Mostrar=false end
-        local Raiz=Car and Car:FindFirstChild("HumanoidRootPart")
-        local Hum=Car and Car:FindFirstChild("Humanoid")
-        local Pantalla,Visible,DistMetros
-        if Raiz then
-            Pantalla,Visible=Camera:WorldToViewportPoint(Raiz.Position)
-            DistMetros=math.floor((Camera.CFrame.Position-Raiz.Position).Magnitude)
-            if DistMetros>MaxDistance then Visible=false end
+    for _,P in ipairs(Players:GetPlayers()) do
+        if P == LocalPlayer then
+            if DibujosESP[P] then
+                for _,D in pairs(DibujosESP[P]) do pcall(function() D.Visible = false end) end
+            end
+            continue
         end
-        if not Visible then Mostrar=false end
-        if not Mostrar then if DibujosESP[Jugador] then for _,D in pairs(DibujosESP[Jugador]) do pcall(function() D.Visible=false end) end end goto continue end
+        local C = P.Character
+        if not C or not C:FindFirstChild("HumanoidRootPart") or not C:FindFirstChild("Humanoid") or C.Humanoid.Health <= 0 then
+            if DibujosESP[P] then
+                for _,D in pairs(DibujosESP[P]) do pcall(function() D.Visible = false end) end
+            end
+            continue
+        end
+        local R = C.HumanoidRootPart
+        local Pos, Vis = Camera:WorldToViewportPoint(R.Position)
+        if not Vis then
+            if DibujosESP[P] then
+                for _,D in pairs(DibujosESP[P]) do pcall(function() D.Visible = false end) end
+            end
+            continue
+        end
 
-        if not DibujosESP[Jugador] then
-            DibujosESP[Jugador]={}
+        if not DibujosESP[P] then
+            DibujosESP[P] = {}
             pcall(function()
-                DibujosESP[Jugador].Caja=Drawing.new("Square")
-                DibujosESP[Jugador].Caja.Thickness=1.5
-                DibujosESP[Jugador].Caja.Color=ColorEsp
-                DibujosESP[Jugador].Nombre=Drawing.new("Text")
-                DibujosESP[Jugador].Nombre.Size=11
-                DibujosESP[Jugador].Nombre.Center=true
-                DibujosESP[Jugador].BarraVidaFondo=Drawing.new("Square")
-                DibujosESP[Jugador].BarraVida=Drawing.new("Square")
-                DibujosESP[Jugador].TextoVida=Drawing.new("Text")
-                DibujosESP[Jugador].TextoVida.Size=9
-                DibujosESP[Jugador].TextoVida.Center=true
-                DibujosESP[Jugador].Distancia=Drawing.new("Text")
-                DibujosESP[Jugador].Distancia.Size=10
-                DibujosESP[Jugador].Distancia.Center=true
+                DibujosESP[P].Caja = Drawing.new("Square")
+                DibujosESP[P].Caja.Thickness = 1.5
+                DibujosESP[P].Caja.Color = ColorEsp
+                DibujosESP[P].Nombre = Drawing.new("Text")
+                DibujosESP[P].Nombre.Size = 11
+                DibujosESP[P].Nombre.Center = true
             end)
         end
 
-        local D=DibujosESP[Jugador] if not D or not D.Caja then goto continue end
-        local Escala=math.clamp(180/DistMetros,0.15,1.2)
-        local Altura=(Camera:WorldToViewportPoint(Vector3.new(0,2.7,0)+Raiz.Position)-Camera:WorldToViewportPoint(Vector3.new(0,-0.3,0)+Raiz.Position)).Y
-        Altura=Altura*Escala local Ancho=Altura*0.4
-        local X=Pantalla.X local Y=Pantalla.Y
-        local Izq=X-Ancho/2 local Arr=Y-Altura/2
-        local VidaPct=Hum.Health/Hum.MaxHealth
+        local D = DibujosESP[P]
+        if not D or not D.Caja then continue end
 
-        D.Caja.Visible=true D.Caja.Position=Vector2.new(Izq,Arr) D.Caja.Size=Vector2.new(Ancho,Altura) D.Caja.Filled=false
-        if D.Nombre then D.Nombre.Visible=true D.Nombre.Text=Jugador.Name D.Nombre.Color=ColorEsp D.Nombre.Position=Vector2.new(X,Arr-16) end
-        if D.BarraVidaFondo and D.BarraVida then
-            D.BarraVidaFondo.Visible=true D.BarraVidaFondo.Position=Vector2.new(Izq-2,Arr-8) D.BarraVidaFondo.Size=Vector2.new(Ancho+4,6) D.BarraVidaFondo.Color=Color3.fromRGB(60,60,60) D.BarraVidaFondo.Filled=true
-            D.BarraVida.Visible=true D.BarraVida.Position=Vector2.new(Izq-2,Arr-8) D.BarraVida.Size=Vector2.new((Ancho+4)*VidaPct,6) D.BarraVida.Color=ColorVida D.BarraVida.Filled=true
+        local Alt = (Camera:WorldToViewportPoint(R.Position + Vector3.new(0,2.5,0)) - Camera:WorldToViewportPoint(R.Position + Vector3.new(0,-0.2,0))).Y
+        local Anc = Alt * 0.4
+        local X = Pos.X
+        local Yp = Pos.Y
+        D.Caja.Visible = true
+        D.Caja.Position = Vector2.new(X - Anc/2, Yp - Alt/2)
+        D.Caja.Size = Vector2.new(Anc, Alt)
+        D.Caja.Filled = false
+
+        if D.Nombre then
+            D.Nombre.Visible = true
+            D.Nombre.Text = P.Name
+            D.Nombre.Color = ColorEsp
+            D.Nombre.Position = Vector2.new(X, Yp - Alt/2 - 14)
         end
-        if D.TextoVida then D.TextoVida.Visible=true D.TextoVida.Text=math.floor(Hum.Health).." HP" D.TextoVida.Color=ColorVida D.TextoVida.Position=Vector2.new(X,Arr-6) end
-        if D.Distancia then D.Distancia.Visible=true D.Distancia.Text=DistMetros.." m" D.Distancia.Color=ColorDistancia D.Distancia.Position=Vector2.new(X,Arr+Altura/2+8) end
-
-        ::continue::
     end
 end)
 
-print("✅ ========================================")
-print("✅ PANEL CARGADO COMPLETAMENTE")
-print("✅ DEBES VER:")
-print("✅  - Botones VERDES/ROJOS de habilidades")
-print("✅  - Botones AZULES de teclas")
-print("✅  - Barras deslizantes")
-print("✅  - Círculo VERDE que sigue al ratón")
-print("✅ ========================================")
+print("[10] ========================================")
+print("[10] ✅ TODO CARGADO COMPLETAMENTE")
+print("[10] ✅ DEBES VER:")
+print("[10] ✅ PANEL OSCURO CON BOTONES")
+print("[10] ✅ CÍRCULO VERDE EN EL CENTRO")
+print("[10] ========================================")
+print("[10] SI NO VES NADA → MIRA LA CONSOLA")
+print("[10] DIME HASTA QUÉ NÚMERO LLEGA EN CONSOLA")
+print("[10] ========================================")
