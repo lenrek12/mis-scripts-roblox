@@ -1,21 +1,18 @@
 -- ==============================================
--- PANEL DE ASISTENCIA + SECCIÓN DIOS
--- ESP TAMAÑO INTELIGENTE · TECLAS CONFIGURABLES Y GUARDADAS
--- TRASPASAR PAREDES · CORRER · VOLAR CON VELOCIDAD 1-1000
--- TODAS LAS FUNCIONES PUEDEN USARSE A LA VEZ
+-- PANEL DE ASISTENCIA — VERSIÓN ARREGLADA
+-- Sin sistema de guardado que falla
+-- ESP tamaño inteligente · Sección DIOS
 -- ==============================================
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
-local StarterGui = game:GetService("StarterGui")
-local TweenService = game:GetService("TweenService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- ⚙️ CARGAR CONFIGURACIÓN GUARDADA
+-- ⚙️ CONFIGURACIÓN
 local Configuracion = {
     Teclas = {
         MostrarOcultar = nil,
@@ -26,34 +23,6 @@ local Configuracion = {
     VelocidadCorrer = 16,
     VelocidadVolar = 50,
 }
-
--- GUARDAR / CARGAR EN LLAVERO
-local function GuardarAjustes()
-    local Cadena = ""
-    for k, v in pairs(Configuracion.Teclas) do
-        Configuracion.Teclas[k] = v or Configuracion.Teclas[k]
-        if Configuracion.Teclas[k] then
-            Cadena = Cadena..k.."="..Configuracion.Teclas[k].Name..";"
-        end
-    end
-    Cadena = Cadena.."Correr="..Configuracion.VelocidadCorrer..";Volar="..Configuracion.VelocidadVolar
-    setfflag("AjustesUsuario", Cadena)
-end
-
-local function CargarAjustes()
-    local Datos = getfflag("AjustesUsuario")
-    if not Datos or Datos == "" then return end
-    for Par in Datos:gmatch("[^;]+") do
-        local Clave, Valor = Par:match("([^=]+)=([^=]+)")
-        if Clave and Valor then
-            if Clave == "Correr" then Configuracion.VelocidadCorrer = tonumber(Valor) or 16
-            elseif Clave == "Volar" then Configuracion.VelocidadVolar = tonumber(Valor) or 50
-            elseif Enum.KeyCode[Valor] then Configuracion.Teclas[Clave] = Enum.KeyCode[Valor] end
-        end
-    end
-end
-
-CargarAjustes()
 
 -- VALORES
 local UiVisible = true
@@ -312,7 +281,6 @@ local function CrearBarra(Nombre, Clave, Min, Max, ValorInicial)
             Configuracion[Clave] = math.floor(Min + Prog*(Max-Min))
             Etiqueta.Text = Nombre..": "..Configuracion[Clave]
             Relleno.Size = UDim2.new(Prog, 0, 1, 0)
-            GuardarAjustes()
         end
     end)
 end
@@ -329,7 +297,6 @@ UserInputService.InputBegan:Connect(function(Entrada, Procesado)
                 BotonesTeclas[EsperandoTecla].Text = BotonesTeclas[EsperandoTecla].Text:gsub("%[.-%]", "["..NombreTecla(Entrada.KeyCode).."]")
                 BotonesTeclas[EsperandoTecla].BackgroundColor3 = Color3.fromRGB(50, 70, 100)
             end
-            GuardarAjustes()
             EsperandoTecla = nil
         end
         return
@@ -412,7 +379,7 @@ end)
 CrearBarra("VELOCIDAD AL CORRER", "VelocidadCorrer", 1, 1000)
 CrearBoton("VOLAR", "Volar", function(On)
     Volar = On
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.GravityScale = On and 0 or 1
         LocalPlayer.Character.Humanoid.JumpPower = On and 0 or 50
     end
@@ -437,7 +404,7 @@ CrearBotonTecla("Activar Zoom", "Zoom")
 
 -- INFORMACIÓN
 local Info = Instance.new("TextLabel")
-Info.Text = "📌 INFORMACIÓN:\n──────────────────────\n➖ MINIMIZAR: Panel se oculta, TODO SIGUE ACTIVO\n❌ CERRAR: Se oculta todo por completo\n──────────────────────\nBotón DERECHO → Mantener para Apuntar\n──────────────────────\nTus ajustes se guardan automáticamente"
+Info.Text = "📌 INFORMACIÓN:\n──────────────────────\n➖ MINIMIZAR: Panel se oculta, TODO SIGUE ACTIVO\n❌ CERRAR: Se oculta todo por completo\n──────────────────────\nBotón DERECHO → Mantener para Apuntar\n──────────────────────\n⚠️ Las teclas se configuran cada vez que se ejecuta"
 Info.Font = Enum.Font.Gotham
 Info.TextSize = 10
 Info.TextColor3 = Color3.fromRGB(160, 160, 160)
@@ -671,7 +638,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 print("✅ SCRIPT CARGADO COMPLETAMENTE")
-print("✅ ESP: Caja se ajusta automáticamente por distancia")
-print("✅ TECLAS: Sin asignar, tú las configuras → SE GUARDAN")
-print("✅ SECCIÓN DIOS: Traspasar paredes · Correr · Volar 1-1000")
-print("✅ TODAS LAS FUNCIONES PUEDEN ACTIVARSE A LA VEZ")
+print("✅ Panel y Círculo visibles")
+print("✅ ESP: Caja se ajusta por distancia")
+print("✅ Sección DIOS: Traspasar · Correr · Volar")
+print("✅ Todas las funciones funcionan juntas")
