@@ -1,5 +1,5 @@
 -- ==============================================
--- VERSIÓN FINAL CORREGIDA — TODO VISIBLE + CÍRCULO FUNCIONAL
+-- CÍRCULO SIGA AL CURSOR + TODAS LAS OPCIONES VISIBLES
 -- ==============================================
 
 -- ⚙️ CONFIGURACIÓN
@@ -32,7 +32,7 @@ local OriginalOutdoorAmbient = Lighting.OutdoorAmbient
 local UiVisible = true
 
 -- ==============================================
--- CÍRCULO DE MIRA (CENTRO DE PANTALLA)
+-- CÍRCULO — SIGUE AL CURSOR DEL RATÓN
 -- ==============================================
 local Circle = Drawing.new("Circle")
 Circle.Visible = true
@@ -42,11 +42,10 @@ Circle.Transparency = 0.7
 Circle.Radius = Config.CircleRadius
 Circle.Color = Config.CircleColor
 
--- ACTUALIZAR POSICIÓN DEL CÍRCULO AL CENTRO
+-- ACTUALIZAR POSICIÓN DEL CÍRCULO = POSICIÓN DEL RATÓN
 local function UpdateCircle()
-    local CenterX = Camera.ViewportSize.X / 2
-    local CenterY = Camera.ViewportSize.Y / 2
-    Circle.Position = Vector2.new(CenterX, CenterY)
+    local MousePos = UserInputService:GetMouseLocation()
+    Circle.Position = Vector2.new(MousePos.X, MousePos.Y)
 end
 
 -- ==============================================
@@ -368,10 +367,12 @@ KeyInfo.Parent = ScrollContainer
 Instance.new("UICorner", KeyInfo).CornerRadius = UDim.new(0, 6)
 
 -- ==============================================
--- SISTEMA DE APUNTADO
+-- SISTEMA DE APUNTADO — DESDE EL CÍRCULO (CURSOR)
 -- ==============================================
 local function GetClosestTarget()
-    local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    -- EL CÍRCULO ESTÁ EN EL CURSOR → BUSCA EN TORNO A LA POSICIÓN DEL RATÓN
+    local MousePos = UserInputService:GetMouseLocation()
+    local Center = Vector2.new(MousePos.X, MousePos.Y)
     local BestTarget, MinDistance = nil, Config.CircleRadius
 
     for _, Player in ipairs(Players:GetPlayers()) do
@@ -402,12 +403,12 @@ local ESP_Drawings = {}
 -- BUCLE PRINCIPAL
 -- ==============================================
 RunService.RenderStepped:Connect(function()
-    -- Mantener círculo centrado
+    -- ✅ EL CÍRCULO SIGUE AL RATÓN
     UpdateCircle()
     Circle.Radius = Config.CircleRadius
     Circle.Visible = UiVisible
 
-    -- ASISTENCIA DE MIRA
+    -- ✅ ASISTENCIA DE MIRA DESDE EL CURSOR
     if Config.AimEnabled and UserInputService:IsMouseButtonDown(Enum.UserInputType.MouseButton2) then
         local Target = GetClosestTarget()
         if Target then
@@ -523,4 +524,4 @@ UserInputService.InputBegan:Connect(function(Input, GameProcessed)
     end
 end)
 
-print("✅ SCRIPT CARGADO — TODAS LAS OPCIONES VISIBLES")
+print("✅ SCRIPT CARGADO — CÍRCULO SIGA AL CURSOR + TODAS LAS OPCIONES")
